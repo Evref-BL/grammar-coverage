@@ -1,0 +1,4 @@
+# Downloaded and generated: images, the JLS cache, logs
+build/
+# Reports of runs
+reports/
