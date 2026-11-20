@@ -90,6 +90,16 @@ loaded, start the oracle with `javac-oracle/run.sh 47811`, then:
 	yourself) run
 ```
 
+A grammar does not say what real code combines, so the same checks also run over a corpus of
+Java files, one line per file in a TSV: its path, then `pass`, `refused` when javac refuses it,
+or the check that failed and its message. The import keeps comments there, and each comment the
+file writes must be imported once and belong to code. Running it on two versions of FAST-Java
+and comparing the files is how a release is checked for regressions.
+
+```bash
+GCOV_CORPUS=/path/to/jdk-sources GCOV_RELEASE=25 scripts/census.sh census.tsv
+```
+
 ## When a new JLS edition comes out
 
 1. See what changed: `scripts/grammar-diff.sh 25 26`. `+` marks a production added, `-` one
