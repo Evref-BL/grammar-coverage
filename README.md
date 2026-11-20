@@ -92,8 +92,8 @@ loaded, start the oracle with `javac-oracle/run.sh 47811`, then:
 
 A grammar does not say what real code combines, so the same checks also run over a corpus of
 Java files, one line per file in a TSV: its path, then `pass`, `refused` when javac refuses it,
-or the check that failed and its message. The import keeps comments there, and each comment the
-file writes must be imported once and belong to code. Running it on two versions of FAST-Java
+or the check that failed and its message. The import keeps comments there: each comment the file
+writes must be imported once, belong to code, and come back once from the export. Running it on two versions of FAST-Java
 and comparing the files is how a release is checked for regressions.
 
 ```bash

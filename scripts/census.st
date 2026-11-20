@@ -71,6 +71,23 @@ check := [ :source |
 	outcome ifNil: [
 		(comments anySatisfy: [ :comment | comment container isKindOf: target commentClass ]) ifTrue: [
 			outcome := { 'comments'. 'a comment belongs to another comment' } ] ].
+	outcome ifNil: [
+		"The export, read back, holds the comments the file writes, each once"
+		| written exported lost added |
+		written := (comments collect: [ :comment | comment content ]) asBag.
+		exported := (((Smalltalk at: #JavaSmaCCProgramNodeImporterVisitor) new
+			               withComments;
+			               parseCodeString: (target exportOf: units anyOne)) allWithType: target commentClass)
+			            collect: [ :comment | comment content ].
+		lost := written copy.
+		added := OrderedCollection new.
+		exported do: [ :content |
+			(lost includes: content)
+				ifTrue: [ lost remove: content ]
+				ifFalse: [ added add: content ] ].
+		(lost isEmpty and: [ added isEmpty ]) ifFalse: [
+			outcome := { 'comments'. 'the export loses ' , lost size printString , ' and adds ' , added size printString
+				  , (lost isEmpty ifTrue: [ '' ] ifFalse: [ ', such as ' , lost anyOne ]) } ] ].
 	outcome ifNil: [ { 'pass'. '' } ] ].
 files := (corpus allChildrenMatching: '*.java') sort: [ :a :b | a fullName < b fullName ].
 out ensureDelete.
