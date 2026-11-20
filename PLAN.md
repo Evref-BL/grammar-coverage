@@ -2,6 +2,8 @@
 
 **Status, 19 November 2026: implemented.** `README.md` describes the result.
 `GCovJLSReader` replaced the Python prototype this plan mentions, and reads the same grammars.
+The prototype, `jls-probe-suite.st` and the census scripts the plan starts from were never part
+of this repository; `scripts/census.sh` now runs the census.
 Three things differ from the plan:
 - Reduction groups failures by reduced program.
 - A failing goal is retried in other programs.
@@ -131,8 +133,7 @@ smallest failing program for that alternative, ready to become an SUnit test.
 
 ## Decisions
 
-- **Where the machinery lives:** in its own repository, this one, kept local for now. It
-  is not pushed anywhere.
+- **Where the machinery lives:** in its own repository, this one.
 - **Generic core, language adapters.** The coverage algorithms know nothing about Java:
   - the grammar model
   - alternative, context-dependent and boundary coverage
