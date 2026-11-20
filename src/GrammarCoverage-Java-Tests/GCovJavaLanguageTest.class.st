@@ -7,6 +7,16 @@ Class {
 }
 
 { #category : 'tests' }
+GCovJavaLanguageTest >> testAnElementValueHoldsALiteral [
+	"JLS 9.7.1: an element value is a constant expression, so inside one a literal is not biased against"
+
+	| language |
+	language := GCovJavaLanguage new.
+	self assert: (language costBiases includesKey: #Literal).
+	self deny: ((language costBiasesWithin at: #ElementValue) includesKey: #Literal)
+]
+
+{ #category : 'tests' }
 GCovJavaLanguageTest >> testContextualKeywordsAreSampleGoals [
 
 	| grammar keywords |

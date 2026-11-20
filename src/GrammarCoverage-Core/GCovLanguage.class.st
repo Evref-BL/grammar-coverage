@@ -18,6 +18,13 @@ GCovLanguage >> costBiases [
 	^ Dictionary new
 ]
 
+{ #category : 'sampling' }
+GCovLanguage >> costBiasesWithin [
+	"Biases that replace my costBiases inside a derivation of the production each key names, so that the smallest derivation can differ in one context. None by default"
+
+	^ Dictionary new
+]
+
 { #category : 'accessing' }
 GCovLanguage >> fileExtension [
 

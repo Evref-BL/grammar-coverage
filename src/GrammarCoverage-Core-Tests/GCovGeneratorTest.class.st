@@ -7,6 +7,30 @@ Class {
 }
 
 { #category : 'tests' }
+GCovGeneratorTest >> testBiasesOfTheLanguage [
+	"Num costs more than `-` alone, so a term in parentheses holds the smaller one"
+
+	| language |
+	language := GCovTestLanguage new biases: (Dictionary new at: #Num put: 5; yourself).
+	self
+		assert: (self sentenceFor: 'Term#2' with: (GCovGenerator grammar: self grammar language: language)) text
+		equals: '( - )'
+]
+
+{ #category : 'tests' }
+GCovGeneratorTest >> testBiasesWithinAProduction [
+	"Inside a term, the language weighs nothing, so a term in parentheses holds a number"
+
+	| language |
+	language := GCovTestLanguage new
+		            biases: (Dictionary new at: #Num put: 5; yourself);
+		            biasesWithin: (Dictionary new at: #Term put: Dictionary new; yourself).
+	self
+		assert: (self sentenceFor: 'Term#2' with: (GCovGenerator grammar: self grammar language: language)) text
+		equals: '( 1 )'
+]
+
+{ #category : 'tests' }
 GCovGeneratorTest >> testContextGoalTarget [
 
 	| sentence |

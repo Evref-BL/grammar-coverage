@@ -62,7 +62,7 @@ GCovReach >> relaxFrom: aProduction settled: settled pending: pending [
 					alternative references do: [ :occurrence |
 							occurrence target ifNotNil: [ :target |
 									| cost |
-									cost := base + (analysis forcedCostOf: occurrence) + (analysis grammar biasOf: target name).
+									cost := base + (analysis forcedCostOf: occurrence) + (analysis biasOf: target name).
 									((settled includes: target name) not and: [ cost < (costs at: target name ifAbsent: [ analysis infinity ]) ]) ifTrue: [
 											costs at: target name put: cost.
 											via at: target name put: occurrence.

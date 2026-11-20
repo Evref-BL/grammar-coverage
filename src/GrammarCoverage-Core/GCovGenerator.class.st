@@ -70,7 +70,7 @@ GCovGenerator >> candidateFor: aGoal route: aRoute [
 
 	^ [
 		  | built sentence |
-		  built := aGoal buildWith: builder.
+		  built := builder within: aRoute do: [ aGoal buildWith: builder ].
 		  sentence := renderer sentenceOf: (builder embed: built first route: aRoute).
 		  sentence
 			  goal: aGoal;

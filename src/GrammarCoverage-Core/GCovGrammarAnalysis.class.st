@@ -16,7 +16,8 @@ Class {
 		'references',
 		'reaches',
 		'languages',
-		'waypointRoutes'
+		'waypointRoutes',
+		'biases'
 	],
 	#category : 'GrammarCoverage-Core-Analysis',
 	#package : 'GrammarCoverage-Core',
@@ -31,6 +32,15 @@ GCovGrammarAnalysis class >> on: aGrammar [
 		  yourself
 ]
 
+{ #category : 'instance creation' }
+GCovGrammarAnalysis class >> on: aGrammar biases: aDictionary [
+	"An analysis that weighs entering a production by aDictionary rather than by the biases of aGrammar"
+
+	^ self new
+		  setGrammar: aGrammar biases: aDictionary;
+		  yourself
+]
+
 { #category : 'costs' }
 GCovGrammarAnalysis >> alternativesByCostOf: aProduction [
 	"The alternatives whose derivations can end, cheapest first, in the order of the grammar between equals"
@@ -40,6 +50,15 @@ GCovGrammarAnalysis >> alternativesByCostOf: aProduction [
 			  costA := self costOfAlternative: a.
 			  costB := self costOfAlternative: b.
 			  costA < costB or: [ costA = costB and: [ a index <= b index ] ] ]
+]
+
+{ #category : 'costs' }
+GCovGrammarAnalysis >> biasOf: aName [
+	"The extra cost of entering the production named aName: by my own biases when I have some, by those of the grammar otherwise"
+
+	^ biases
+		  ifNil: [ grammar biasOf: aName ]
+		  ifNotNil: [ biases at: aName asSymbol ifAbsent: [ 0 ] ]
 ]
 
 { #category : 'initialization' }
@@ -126,7 +145,7 @@ GCovGrammarAnalysis >> costOfReference: aReference [
 
 	^ aReference target
 		  ifNil: [ self infinity ]
-		  ifNotNil: [ :production | (self costOf: production) + (grammar biasOf: production name) min: self infinity ]
+		  ifNotNil: [ :production | (self costOf: production) + (self biasOf: production name) min: self infinity ]
 ]
 
 { #category : 'costs' }
@@ -252,7 +271,14 @@ GCovGrammarAnalysis >> routeFrom: aRoot to: aProduction [
 { #category : 'initialization' }
 GCovGrammarAnalysis >> setGrammar: aGrammar [
 
+	self setGrammar: aGrammar biases: nil
+]
+
+{ #category : 'initialization' }
+GCovGrammarAnalysis >> setGrammar: aGrammar biases: aDictionary [
+
 	grammar := aGrammar.
+	biases := aDictionary.
 	reaches := Dictionary new.
 	languages := Dictionary new.
 	waypointRoutes := Dictionary new.

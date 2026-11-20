@@ -2,6 +2,8 @@
 I build derivation trees. Everything not forced takes the smallest derivation, so that a sentence holds what its goal asks for and as little else as possible. I embed a derivation in a sentence of the start symbol by following a route of reference occurrences up to the root.
 
 The language adapter provides the samples of descriptions and judges the exclusions written in prose. An exclusion that refuses the smallest derivation of its base makes me try the other alternatives of the base; a derivation deeper than my maximum depth is impossible.
+
+Inside a production for which the language has biases of its own, the smallest derivation is the one those biases make smallest. I know the productions I am deriving in, and a goal is built inside the productions of the route that will embed it.
 "
 Class {
 	#name : 'GCovBuilder',
@@ -10,7 +12,10 @@ Class {
 		'grammar',
 		'analysis',
 		'language',
-		'depth'
+		'depth',
+		'contexts',
+		'contextBiases',
+		'contextAnalyses'
 	],
 	#category : 'GrammarCoverage-Core-Derivation',
 	#package : 'GrammarCoverage-Core',
@@ -31,6 +36,16 @@ GCovBuilder >> analysis [
 	^ analysis
 ]
 
+{ #category : 'accessing' }
+GCovBuilder >> analysisHere [
+	"The analysis whose costs choose the smallest derivations here: that of the innermost production being derived for which the language has biases of its own, or that of the grammar"
+
+	contexts reverseDo: [ :name |
+			(contextBiases at: name ifAbsent: [ nil ]) ifNotNil: [ :biases |
+				^ contextAnalyses at: name ifAbsentPut: [ GCovGrammarAnalysis on: grammar biases: biases ] ] ].
+	^ analysis
+]
+
 { #category : 'instantiating' }
 GCovBuilder >> anotherInstanceOf: aSequence [
 	"An instance of aSequence for an item after the first. When the sequence is a single reference, it derives another alternative where one can be derived, so that the items differ"
@@ -39,7 +54,7 @@ GCovBuilder >> anotherInstanceOf: aSequence [
 	element := aSequence elements size = 1 ifTrue: [ aSequence elements first ].
 	(element isNotNil and: [ element isReference and: [ element target isNotNil ] ]) ifTrue: [
 			| alternatives |
-			alternatives := analysis alternativesByCostOf: element target.
+			alternatives := self analysisHere alternativesByCostOf: element target.
 			alternatives size > 1 ifTrue: [
 					[
 						| node |
@@ -56,9 +71,12 @@ GCovBuilder >> derive: aProduction alternative: anAlternative forcing: aForcing 
 
 	| body |
 	depth := depth + 1.
+	contexts addLast: aProduction name.
 	[
 		depth > self maxDepth ifTrue: [ GCovImpossible signal: 'A derivation deeper than ' , self maxDepth printString ].
-		body := self instantiate: anAlternative expression forcing: aForcing ] ensure: [ depth := depth - 1 ].
+		body := self instantiate: anAlternative expression forcing: aForcing ] ensure: [
+			depth := depth - 1.
+			contexts removeLast ].
 	^ GCovDerivationNode production: aProduction alternative: anAlternative body: body
 ]
 
@@ -206,14 +224,17 @@ GCovBuilder >> setGrammar: aGrammar language: aLanguage [
 	grammar := aGrammar.
 	analysis := aGrammar analysis.
 	language := aLanguage.
-	depth := 0
+	depth := 0.
+	contexts := OrderedCollection new.
+	contextBiases := aLanguage costBiasesWithin.
+	contextAnalyses := Dictionary new
 ]
 
 { #category : 'deriving' }
 GCovBuilder >> shortest: aProduction [
 	"The smallest derivation of aProduction that its exclusions allow"
 
-	^ self derive: aProduction alternativesInOrder: (analysis alternativesByCostOf: aProduction)
+	^ self derive: aProduction alternativesInOrder: (self analysisHere alternativesByCostOf: aProduction)
 ]
 
 { #category : 'instantiating' }
@@ -246,4 +267,15 @@ GCovBuilder >> variantsOf: anExpression forcing: aForcing [
 													 count: count of: inner;
 													 yourself) ] ] ] ] ].
 	^ variants
+]
+
+{ #category : 'deriving' }
+GCovBuilder >> within: aRoute do: aBlock [
+	"Evaluate aBlock as a derivation inside the productions of aRoute, from its root down, so that the biases of those contexts apply to it"
+
+	| outer |
+	outer := contexts.
+	contexts := outer copy.
+	aRoute do: [ :occurrence | contexts addLast: occurrence production name ].
+	^ aBlock ensure: [ contexts := outer ]
 ]

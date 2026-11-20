@@ -3,6 +3,7 @@ I am what the generator needs to know about Java beyond the JLS grammar:
 
 - samples for the descriptions in prose of chapter 3, such as a Java letter, a line terminator or a Unicode character;
 - the exclusion `but not CR or LF`;
+- the smallest expression of an element value, a literal rather than `this`, since JLS 9.7.1 writes a constant there;
 - sample goals: each contextual keyword spelled as an identifier, written as an identifier, where the grammar does not spell it out.
 
 Sentences separate tokens with a space; their files end in `.java`.
@@ -17,11 +18,22 @@ Class {
 
 { #category : 'sampling' }
 GCovJavaLanguage >> costBiases [
-	"An annotation element value must be a constant expression (JLS 9.7.1), so most expressions are wrong there although the grammar allows them: keep expressions out of annotations unless the goal is there. A literal as the default expression makes receivers like `0.a()`, which no type has: prefer `this`"
+	"An annotation element value must be a constant expression (JLS 9.7.1), so most expressions are wrong there although the grammar allows them: keep expressions out of annotations unless the goal is there. A literal as the default expression makes receivers like `0.a()`, which no type has: prefer `this`, except in an element value (see costBiasesWithin)"
 
 	^ Dictionary new
 		  at: #ElementValue put: 20;
 		  at: #Literal put: 1;
+		  yourself
+]
+
+{ #category : 'sampling' }
+GCovJavaLanguage >> costBiasesWithin [
+	"An element value is a constant expression (JLS 9.7.1), so inside one a literal is the smallest expression, not `this`"
+
+	^ Dictionary new
+		  at: #ElementValue put: (self costBiases
+				   removeKey: #Literal;
+				   yourself);
 		  yourself
 ]
 
